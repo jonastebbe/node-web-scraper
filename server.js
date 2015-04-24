@@ -5,31 +5,25 @@ var cheerio = require('cheerio');
 var app     = express();
 
 app.get('/scrape', function(req, res){
-	// Let's scrape Anchorman 2
-	url = 'http://www.imdb.com/title/tt1229340/';
+	url = 'http://www.idealo.de/preisvergleich/MainSearchProductCategory.html?q=kühlschrank';
 
 	request(url, function(error, response, html){
 		if(!error){
 			var $ = cheerio.load(html);
 
-			var title, release, rating;
-			var json = { title : "", release : "", rating : ""};
+			var json = [];
 
-			$('.header').filter(function(){
-		        var data = $(this);
-		        title = data.children().first().text();
-		        release = data.children().last().children().text();
+			$('#tiles tr').each(function(){
+				$(this).find('td').each (function() {
 
-		        json.title = title;
-		        json.release = release;
-	        })
+					var name = $(this).find('.info .offer-title').text().trim();
+					var priceRange = $(this).find('.cta .link-composed-2 .price').text().trim();
 
-	        $('.star-box-giga-star').filter(function(){
-	        	var data = $(this);
-	        	rating = data.text();
-
-	        	json.rating = rating;
-	        })
+					if (name !== '') {
+						json.push({name : name, priceRange : priceRange});
+					}
+				});
+		    })
 		}
 
 		fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
@@ -42,4 +36,4 @@ app.get('/scrape', function(req, res){
 
 app.listen('8081')
 console.log('Magic happens on port 8081');
-exports = module.exports = app; 	
+exports = module.exports = app;
